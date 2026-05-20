@@ -31,16 +31,26 @@ select count(*) from bookings_staging;
 -- ==========================================
 -- ======PART B Audit queries ======================
 
+-- Clean 1 - fix guest name: trim + fix casing - Captalization 
+-- ALICE MWANGI - should be -> Alice Mwangi
+-- brian otieno  - should be -> Brian Otieno 
 -- Audit 1 - guest name problems 
-select distinct  guest_name from bookings_staging limit 40;
+
+select distinct  guest_name 
+from bookings_staging 
+limit 40;
+
+
 -- we have CAPS need to fix the casing - INITCAP
 -- we have names in lowercase - 
 update bookings_staging
 set guest_name = initcap(guest_name);
 
+
 -- removing extra spaces i.e Carol Wanjiku
 update bookings_staging
 set guest_name = trim(guest_name);
+
 
 -- Audit 2 - room type distinct values
 select 
@@ -50,9 +60,11 @@ from bookings_staging
 group by room_type 
 order by room_type;
 
+
 /* Expected values: Standard, Deluxe,Suite, Penthouse)
  * dirty values - DLX, Std, standard, deluxe
- * 
+ * -- Clean 5 - roomtype: abbreviations and lowercase 
+-- Standard, Deluxe, Suite, Penthouse
  * */
 
 update bookings_staging
@@ -64,11 +76,14 @@ case
 end
 ;
 
+
 -- Audit 3 - payment method 
 select distinct  payment_method 
 from bookings_staging;
 
+-- Clean 6 - Payment method and booking_status , casing 
 -- expected - Mpesa , Card, Bank Transfer , Cash
+
 update bookings_staging
 set payment_method = 
 case
@@ -78,12 +93,14 @@ case
 end
 ;
 
+
 -- Audit 4 - booking status
 select distinct  booking_status 
 from bookings_staging;
 
 update bookings_staging
 set booking_status = initcap(booking_status);
+
 
 -- Audit 5 - phone, city
 -- phone 
@@ -94,6 +111,7 @@ select
 from bookings_staging 
 where guest_phone is null or trim(guest_phone) = ''
 group by guest_name;
+
 
 -- display guest
 select 
@@ -107,6 +125,11 @@ group by
 ;
 
 -- add 0 to phone number, limit digits to 10, remove any other value other than 0-9
+-- Clean 2 - guest phone: remove dashes, fix +254 
+-- +254715623803 - 0715623803
+-- 07-15-623-803 - 0715623803 
+
+
 update bookings_staging
 set guest_phone = 0|| regexp_replace(
 						regexp_replace(
@@ -117,12 +140,25 @@ set guest_phone = 0|| regexp_replace(
 where guest_phone is not null
 ;
 
--- phone 
+--I realizes that there are numbers with more than 10 digits after running the above code, so
+--I wrote another code to repalce the two digits with one digit
+select 
+	guest_phone, 
+	guest_name
+from bookings_staging
+where length(guest_phone) > 10;
+
+update bookings_staging
+set guest_phone = '0745678901'
+where guest_phone = '00745678901';
+
 select booking_id, guest_phone from bookings_staging
 where guest_phone like '+254%' or guest_phone like '%-%';
 
--- city
 
+
+-- city
+-- Clean 3 - guest city: typos, casing , empty (Unknown)
 
 select distinct 
 	case
@@ -143,6 +179,8 @@ set guest_city = case
 					end
 ;
 
+
+-- clean 8 - guest rating: invalid values - null 
 -- Audit 6 - Ratings 
 select 
 	booking_id, 
@@ -154,71 +192,156 @@ where
 	trim(guest_rating) = ''
 ;
 
+update bookings_staging 
+set guest_rating = null
+where 
+	trim(guest_rating) not in ('1', '2', '3', '4', '5') or 
+	trim(guest_rating) = ''
+;
 
 -- Audit 7 - Date Format problems
 select booking_id, check_in_date, check_out_date 
 from bookings_staging 
 where check_in_date not similar to '[0-9]{4}-[0-9]{2}-[0-9]{2}';
 
--- ==================================================
--- ======= Part C - Time to clean data ==============
-
--- Clean 1 - fix guest name: trim + fix casing - Captalization 
--- ALICE MWANGI - should be -> Alice Mwangi
--- brian otieno  - should be -> Brian Otieno 
-
-
-
-
--- Clean 2 - guest phone: remove dashes, fix +254 
--- +254715623803 - 0715623803
--- 07-15-623-803 - 0715623803 
-
-
-
--- Clean 3 - guest city: typos, casing , empty (Unknown)
-
-
 
 -- Clean 4 - Date formats 
 -- 2026-04-28 
 
+select 
+	check_in_date,
+	check_out_date
+from bookings_staging
+;
+
+select 
+	check_in_date,
+	check_out_date
+from bookings_staging
+where check_in_date LIKE '%-%-%'
+	or check_out_date LIKE '%-%-%';
 
 
--- Clean 5 - roomtype: abbreviations and lowercase 
--- Standard, Deluxe, Suite, Penthouse
+update bookings_staging 
+set  check_in_date = to_char(to_date(check_in_date, 'YYYY-MM-DD'), 'DD-MM-YYYY'),
+	 check_out_date = to_char(to_date(check_out_date, 'YYYY-MM-DD'), 'DD-MM-YYYY')
+where check_in_date LIKE '%-%-%'
+	or check_out_date LIKE '%-%-%';
 
+--format date 
+update bookings_staging 
+set  check_in_date = to_char(to_date(check_in_date, 'DD-MM-YYYY'), 'YYYY-MM-DD'),
+	 check_out_date = to_char(to_date(check_out_date, 'DD-MM-YYYY'), 'YYYY-MM-DD')
+;
 
-
--- Clean 6 - Payment method and booking_status , casing 
 
 
 
 -- clean 7 - total amount and staff salary (strip KES, commas, cast to number)
 
-select *
+select 
+	staff_salary
 from bookings_staging;
 
 update bookings_staging
-set staff_salary = regexp_replace(
-						cast ( staff_salary as int), '^[0-9.]', '', 'g' 
-);
-
--- clean 8 - guest rating: invalid values - null 
+set staff_salary = nullif(regexp_replace( 
+							trim(staff_salary::text),
+								'[^0-9.]', '', 'g'),
+								''
+								):: decimal (12,2) 
+where staff_salary is not null
+		and trim(staff_salary)::text != '';
 
 
 -- clean 9 - Remove exact duplicates 
 select booking_id, count(*) from bookings_staging
 group by booking_id having count(*) > 1;
 
+DELETE FROM bookings_staging
+WHERE ctid NOT IN (
+    SELECT MIN(ctid)
+    FROM bookings_staging
+    GROUP BY booking_id
+);
+
+
 
 
 -- clean 10 - figure out other fixes you need to do 
+--cleaned the total amount section 
+select 
+	*
+from bookings_staging;
 
+
+update bookings_staging
+set total_amount = nullif(regexp_replace( 
+							trim(total_amount::text),
+								'[^0-9.]', '', 'g'),
+								''
+								):: decimal (12,2) 
+where total_amount is not null
+		and trim(total_amount)::text != ''
+;
+
+---cleaning service price just to be sure it is clean
+
+select 
+	service_price
+from bookings_staging;
+
+
+update bookings_staging
+set service_price = nullif(regexp_replace( 
+							trim(service_price::text),
+								'[^0-9.]', '', 'g'),
+								''
+								):: decimal (12,2) 
+where service_price is not null
+		and trim(service_price)::text != ''
+;
 
 -- ========== PART D ==========================
 -- Create production table and load clean data .
 
 create table if not exists bookings(
-		booking_id VARCHAR(10) primary key,
-		
+	booking_id 			VARCHAR(10) primary key,
+    guest_name      	VARCHAR(25),
+    guest_phone        	VARCHAR(15),  
+    guest_city          VARCHAR(25),
+    guest_nationality   VARCHAR(25),  
+    room_no             INT,
+    room_type           VARCHAR(25),  
+    room_rate_per_night  NUMERIC(10,2),
+    check_in_date       DATE,  
+    check_out_date      DATE,
+    nights_stayed       INT,  
+    staff_name          VARCHAR(25),
+    staff_department    VARCHAR(50),  
+    staff_salary        NUMERIC(10,2),
+    payment_method      VARCHAR(25),  
+    booking_status      VARCHAR(25),
+    total_amount        NUMERIC(10,2),  
+    service_used        VARCHAR(25),
+    service_price       NUMERIC(10,2),  
+    guest_rating        INT
+);
+
+INSERT INTO bookings (
+    booking_id, guest_name, guest_phone, guest_city, guest_nationality,
+    room_no, room_type, room_rate_per_night, check_in_date, check_out_date,
+    nights_stayed, staff_name, staff_department, staff_salary, payment_method,
+    booking_status, total_amount, service_used, service_price, guest_rating
+)
+SELECT 
+    booking_id, guest_name, guest_phone, guest_city, guest_nationality,
+    room_no::INT, room_type, room_rate_per_night::NUMERIC, 
+    check_in_date::DATE, check_out_date::DATE,
+    nights_stayed::INT, staff_name, staff_department, staff_salary::NUMERIC, 
+    payment_method, booking_status, total_amount::NUMERIC, 
+    service_used, service_price::NUMERIC, guest_rating::INT
+FROM bookings_staging;
+
+
+select *
+from bookings;

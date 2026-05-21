@@ -8,10 +8,51 @@ Here is where the dashboard will be displayed using power power BI.
 
 <img src='./wireframe.png'>
 
-here is the display of clean data in Postgres.
+## Key Performance Indicators
 
-<img src='./postgres.png'>
+- Total revenue by month
 
-here is the connected dataset from Postgres to Power BI. 
+```SQL
+ *		-- total revenue by month, by room, by payment method
 
-<img src='./power bi connect.png'>
+-- total revenue
+select 
+	EXTRACT(MONTH FROM "check_in_date") as booking_month,
+	sum(total_amount)  as revenue
+from bookings
+group by 
+	EXTRACT(MONTH FROM "check_in_date")
+order by EXTRACT(MONTH FROM "check_in_date") ;
+
+```
+<img src='./Script Revenue By Month SQL.png'>
+<img src='./Revenue By Month SQL.png'>
+
+- Total revenue by room type
+```sql
+-- total revenue by room
+select 
+	room_type,
+	sum(total_amount)  as revenue
+from bookings
+group by room_type 
+order by sum(total_amount) desc;
+```
+
+<img src='Revenue By Room SQL.png'>
+<img src='./Revenue By Room Type Vs.png'>
+
+- Total Revenue by Paymenth Method
+
+```sql 
+--total revenue by payment method
+select 
+	payment_method,
+	sum(total_amount) as revenue
+from bookings
+group by payment_method 
+order by sum(total_amount) desc;
+
+```
+<img src='Revenue By Payment Method SQL.png'>
+<img src='./Revenue By Payment Method VSL.png'>

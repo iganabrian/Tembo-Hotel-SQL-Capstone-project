@@ -345,3 +345,36 @@ FROM bookings_staging;
 
 select *
 from bookings;
+
+--Queries answering some business questions:
+ *	-- Revenue analysis 
+ *		-- total revenue by month, by room, by payment method
+-- total revenue
+select 
+	EXTRACT(MONTH FROM "check_in_date") as booking_month,
+	sum(total_amount)  as revenue
+from bookings
+group by 
+	EXTRACT(MONTH FROM "check_in_date")
+order by EXTRACT(MONTH FROM "check_in_date") ;
+
+-- total revenue by room
+select 
+	room_type,
+	sum(total_amount)  as revenue
+from bookings
+group by room_type 
+order by sum(total_amount) desc;
+
+-- total revenue by payment method
+select 
+	payment_method,
+	sum(total_amount) as revenue
+from bookings
+group by payment_method 
+order by sum(total_amount) desc;
+
+ *	--Occupancy - which room types are booked most? (avg nights stayed by room type)
+ *	-- Staff performance - which staff handled the most bookings?
+ *	-- Cancellations - Cancellation rate per room type. Revenue lost from cancellationor no-shows
+ */

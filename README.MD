@@ -6,7 +6,7 @@ I will be working on the business questions on SQL, then do them again on power 
 
 Here is where the dashboard will be displayed using power power BI.
 
-<img src='./wireframe.png'>
+<img src='./Dwireframe.png'>
 
 ## Key Performance Indicators
 

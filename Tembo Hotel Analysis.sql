@@ -374,6 +374,28 @@ from bookings
 group by payment_method 
 order by sum(total_amount) desc;
 
+---add a new column for days stayed and month checked in
+
+alter table bookings
+add column	sales_months  int,
+add column days_stayed int
+;
+
+
+update bookings
+set days_stayed = check_out_date - check_in_date,
+	sales_months = extract(month from check_in_date):: int
+	
+;
+
+select 
+	check_in_date,
+	sales_months,
+	days_stayed  
+from bookings;
+
+
+
  *	--Occupancy - which room types are booked most? (avg nights stayed by room type)
  *	-- Staff performance - which staff handled the most bookings?
  *	-- Cancellations - Cancellation rate per room type. Revenue lost from cancellationor no-shows

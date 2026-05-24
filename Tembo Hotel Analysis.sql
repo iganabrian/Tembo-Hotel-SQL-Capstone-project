@@ -343,8 +343,7 @@ SELECT
 FROM bookings_staging;
 
 
-select *
-from bookings;
+
 
 --Queries answering some business questions:
  *	-- Revenue analysis 
@@ -394,7 +393,14 @@ select
 	days_stayed  
 from bookings;
 
+--there is a blank or null city for Henry Korir let's fix him in Eldoret
+select *
+from bookings
+where guest_city is null;
 
+update  bookings
+set guest_city = 'Eldoret'
+where guest_name = 'Henry Korir';
 
  *	--Occupancy - which room types are booked most? (avg nights stayed by room type)
  *	-- Staff performance - which staff handled the most bookings?

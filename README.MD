@@ -8,6 +8,10 @@ Here is where the dashboard will be displayed using power power BI.
 
 <img src='./Dwireframe.png'>
 
+Report I
+
+<img src="./Report 1.png">
+
 ## Key Performance Indicators
 
 - Total revenue by month

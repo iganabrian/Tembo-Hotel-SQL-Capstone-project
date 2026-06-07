@@ -1,24 +1,35 @@
-This is a capstone project that I am working on. I will be updating the repository as I go on.
 
-The dataset in completely clean, I have created a connection with my powerBI. 
+# Tembo Hotel Analytics: Relational Database Engineering & Business Intelligence Pipeline
 
-I will be working on the business questions on SQL, then do them again on power BI. 
+Dashboard
 
-Here is where the dashboard will be displayed using power power BI.
-
-<img src='./Dwireframe.png'>
+<img src='./Images/Dwireframe.png'>
 
 Report I
 
-<img src="./Report 1.png">
+<img src="./Images/Report 1.png">
 
-## Key Performance Indicators
+An end-to-end data engineering and analytics solution that transforms raw, unorganized hotel operational records into an optimized SQL relational database, yielding key insights through an interactive Power BI dashboard.
 
-- Total revenue by month
+## Business Problem
+Tembo Hotel management struggled with fragmented booking records, untracked operational costs, and undefined occupancy trends. This lack of centralized visibility led to delayed reporting and revenue leakage from underpriced seasonal bookings.
 
-```SQL
- *		-- total revenue by month, by room, by payment method
+## Project Objectives
+* **Database Architecture:** Design and deploy a structured SQL relational schema eliminating data redundancy.
+* **ETL Pipeline:** Extract, clean, and transform messy reservation logs using advanced SQL operations.
+* **Analytics & BI:** Construct optimized business queries to uncover seasonal performance and present executive insights via Power BI.
 
+## Tech Stack
+* **Database Engine:** PostgreSQL
+* **Data Transformation:** SQL (CTEs, Window Functions, Aggregations)
+* **Business Intelligence:** Power BI (DAX, Star Schema Modeling)
+
+## SQL Analytics Examples
+
+### 1. Identifying Total Revenue, Revenue By Room Type and Payment Method
+These queries calculat total revenue to assist leadership in identifying Key Performance Indicators in booking revenue.
+
+```sql
 -- total revenue
 select 
 	EXTRACT(MONTH FROM "check_in_date") as booking_month,
@@ -28,12 +39,6 @@ group by
 	EXTRACT(MONTH FROM "check_in_date")
 order by EXTRACT(MONTH FROM "check_in_date") ;
 
-```
-<img src='./Script Revenue By Month SQL.png'>
-<img src='./Revenue By Month SQL.png'>
-
-- Total revenue by room type
-```sql
 -- total revenue by room
 select 
 	room_type,
@@ -41,15 +46,8 @@ select
 from bookings
 group by room_type 
 order by sum(total_amount) desc;
-```
 
-<img src='Revenue By Room SQL.png'>
-<img src='./Revenue By Room Type Vs.png'>
-
-- Total Revenue by Paymenth Method
-
-```sql 
---total revenue by payment method
+-- total revenue by payment method
 select 
 	payment_method,
 	sum(total_amount) as revenue
@@ -58,5 +56,11 @@ group by payment_method
 order by sum(total_amount) desc;
 
 ```
-<img src='Revenue By Payment Method SQL.png'>
-<img src='./Revenue By Payment Method VSL.png'>
+
+## Key Business Insights & Deliverables
+* **Peak Revenue Drivers:** Suite and Dulex room types accounted high total revenue.
+* **Cancellation Analysis:** Pinpointed a 15% cancellation pattern during specific peak periods, suggesting a requirement for stricter booking deposit policies.
+
+## How to Replicate This Project
+1. Clone the repository: `git clone https://github.com/iganabrian/Tembo-Hotel-SQL-Capstone-project.git`
+2. Open `https://github.com/iganabrian/Tembo-Hotel-SQL-Capstone-project/blob/master/Power%20BI%20Dashboard/tembo_hotel_dashbord.pbix` to explore the dashboard.

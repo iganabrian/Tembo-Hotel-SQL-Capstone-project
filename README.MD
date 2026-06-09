@@ -56,6 +56,40 @@ group by payment_method
 order by sum(total_amount) desc;
 
 ```
+## SQL Advance Analytics Examples
+
+### 1. Identifying Month on Month Total Sales by Confirmed Booking Status
+These queries calculates and compares total revenue by month and provides the Previous Month sales percentage using Common Table Expression (CTEs) and Window Function.
+
+```sql
+-- calculating Month on Month Sales %
+with monthly_sales as (
+select 
+	to_char(check_in_date, 'Mon') as Sales_month,
+	extract(month from check_in_date) as Month_No,
+	sum(total_amount) as total_sales
+from bookings
+where booking_status = 'Checked Out'
+group by
+	to_char(check_in_date, 'Mon'),
+	extract(month from check_in_date)
+order by 
+	extract(month from check_in_date)
+),
+previous_month_sales as (
+select 
+	sales_month,
+	total_sales,
+	lag(total_sales,1,total_sales) over ()as prev_month_sales
+from monthly_sales
+)
+select *,
+		round((total_sales-prev_month_sales)/prev_month_sales * 100,2) as MoM_Sales_Pcnt
+from previous_month_sales as pm;
+```
+Output
+
+<img src="./Images/MoM Sales.png">
 
 ## Key Business Insights & Deliverables
 * **Peak Revenue Drivers:** Suite and Dulex room types accounted high total revenue.

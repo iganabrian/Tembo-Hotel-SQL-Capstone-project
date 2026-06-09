@@ -394,13 +394,48 @@ select
 from bookings;
 
 --there is a blank or null city for Henry Korir let's fix him in Eldoret
-select *
+select 
 from bookings
 where guest_city is null;
 
 update  bookings
 set guest_city = 'Eldoret'
 where guest_name = 'Henry Korir';
+
+select 
+	guest_name,
+	service_used
+from bookings
+where service_used is not null;
+
+select 
+distinct booking_status
+from bookings;
+
+-- calculating Month on Month Sales %
+with monthly_sales as (
+select 
+	to_char(check_in_date, 'Mon') as Sales_month,
+	extract(month from check_in_date) as Month_No,
+	sum(total_amount) as total_sales
+from bookings
+where booking_status = 'Checked Out'
+group by
+	to_char(check_in_date, 'Mon'),
+	extract(month from check_in_date)
+order by 
+	extract(month from check_in_date)
+),
+previous_month_sales as (
+select 
+	sales_month,
+	total_sales,
+	lag(total_sales,1,total_sales) over ()as prev_month_sales
+from monthly_sales
+)
+select *,
+		round((total_sales-prev_month_sales)/prev_month_sales * 100,2) as MoM_Sales_Pcnt
+from previous_month_sales as pm;
 
  *	--Occupancy - which room types are booked most? (avg nights stayed by room type)
  *	-- Staff performance - which staff handled the most bookings?
